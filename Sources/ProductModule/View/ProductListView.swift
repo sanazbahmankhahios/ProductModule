@@ -7,8 +7,8 @@
 import SwiftUI
 import ProductKit
 
-public struct ProductListView: View {
-    @ObservedObject private var viewModel = ProductListViewModel()
+public struct ProductList: View {
+    @ObservedObject private var viewModel = ProductViewModel()
     
     public init() {}
     
@@ -16,9 +16,40 @@ public struct ProductListView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 searchBar
+                
                 ScrollView {
-                    productList
-                        .padding(.top, 10)
+                    LazyVStack(spacing: 0) {
+                        if viewModel.filteredProducts.isEmpty && !viewModel.searchText.isEmpty {
+                            emptyState
+                        } else {
+                            ForEach(viewModel.searchText.isEmpty ? viewModel.products : viewModel.filteredProducts) { product in
+                                NavigationLink {
+                                    ProductDetailView(viewModel: ProductDetailViewModel(product: product))
+                                } label: {
+                                    ProductCell(
+                                        title: product.title,
+                                        description: product.description,
+                                        price: product.price,
+                                        discountPercentage: product.discountPercentage,
+                                        icon: product.thumbnail,
+                                        tags: product.tags,
+                                        rate: product.rating
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                                .onAppear {
+                                    if viewModel.searchText.isEmpty {
+                                        viewModel.getMoreProducts(currentItem: product)
+                                    }
+                                }
+                            }
+                        }
+                        
+                        if viewModel.shouldShowLoading {
+                            LoaderView(failed: viewModel.isRequestFailed)
+                        }
+                    }
+                    .padding(.top, 8)
                 }
             }
             .navigationTitle("Products")
@@ -32,37 +63,6 @@ public struct ProductListView: View {
             .background(Color.gray.opacity(0.2))
             .cornerRadius(8)
             .padding(.horizontal)
-    }
-    
-    private var productList: some View {
-        LazyVStack {
-            if viewModel.filteredProducts.isEmpty && !viewModel.searchText.isEmpty {
-                emptyState
-            } else {
-                ForEach(viewModel.searchText.isEmpty ? viewModel.products : viewModel.filteredProducts) { product in
-                    NavigationLink {
-                        ProductDetailView(viewModel: ProductDetailViewModel(product: product))
-                    } label: {
-                        ProductCell(
-                            title: product.title,
-                            description: product.description,
-                            price: product.price,
-                            discountPercentage: product.discountPercentage,
-                            icon: product.thumbnail,
-                            tags: product.tags,
-                            rate: product.rating
-                        )
-                    }
-                    .buttonStyle(.plain)
-                }
-                
-                if viewModel.shouldShowLoading {
-                    LoaderView(failed: viewModel.isRequestFailed)
-                        .onAppear { viewModel.getProducts() }
-                }
-            }
-        }
-        .padding(.top, 10)
     }
     
     private var emptyState: some View {
