@@ -5,6 +5,7 @@
 //  Created by sanaz on 11/6/25.
 //
 import Foundation
+import ProductKit
 
 public final class ProductCacheManager {
     private let cacheURL: URL

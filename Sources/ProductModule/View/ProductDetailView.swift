@@ -10,13 +10,13 @@ import ProductKit
 
 public struct ProductDetailView: View {
     @ObservedObject private var viewModel: ProductDetailViewModel
-    static let imageHeight: CGFloat = 300
+     private let imageHeight: CGFloat = 300
     
     init(viewModel: ProductDetailViewModel) {
         self.viewModel = viewModel
     }
     
-    var body: some View {
+    public var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading) {
                 ImageSlider(images: viewModel.product.images)
