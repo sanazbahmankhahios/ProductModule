@@ -49,7 +49,7 @@ public struct ProductList: View {
     private var productContent: some View {
         let products = viewModel.searchText.isEmpty ? viewModel.products : viewModel.filteredProducts
         
-        if products.isEmpty && !viewModel.searchText.isEmpty {
+        if viewModel.filteredProducts.isEmpty && !viewModel.searchText.isEmpty {
             emptyState
         } else {
             ForEach(products) { product in
@@ -70,8 +70,11 @@ public struct ProductList: View {
                 .buttonStyle(.plain)
                 .onAppear {
                     if products.last?.id == product.id {
-                        viewModel.getMoreProducts(currentItem: product)
+                        viewModel.getMoreProducts()
                     }
+                }
+                .onChange(of: viewModel.products.count) {
+                    // TODO: Check if search result is correct and get more if needed
                 }
             }
         }
