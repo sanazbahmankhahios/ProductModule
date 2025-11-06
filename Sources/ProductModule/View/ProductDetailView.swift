@@ -10,23 +10,24 @@ import ProductKit
 
 public struct ProductDetailView: View {
     @ObservedObject private var viewModel: ProductDetailViewModel
+    static let imageHeight: CGFloat = 300
     
     init(viewModel: ProductDetailViewModel) {
         self.viewModel = viewModel
     }
     
-    public var body: some View {
+    var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
             VStack(alignment: .leading) {
                 ImageSlider(images: viewModel.product.images)
-                    .frame(height: 300)
-                
+                    .frame(height: imageHeight)
+
                 VStack(alignment: .leading, spacing: 16) {
                     HeaderView(
                         title: viewModel.product.title,
                         description: viewModel.product.description
                     )
-                    
+
                     HStack(alignment: .top) {
                         TagsView(tags: viewModel.product.tags)
                         Spacer()
@@ -35,10 +36,10 @@ public struct ProductDetailView: View {
                             StockView(stock: viewModel.product.stock)
                         }
                     }
-                    
+
                     PriceView(
                         price: viewModel.product.price,
-                        discount: viewModel.product.discountPercentage
+                        discountedPrice: viewModel.product.discountPercentage
                     )
                 }
                 .padding(20)
@@ -54,7 +55,7 @@ public struct ProductDetailView: View {
 struct HeaderView: View {
     var title: String
     var description: String
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
@@ -67,7 +68,7 @@ struct HeaderView: View {
 
 struct TagsView: View {
     var tags: [String]
-    
+
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack {
@@ -87,7 +88,7 @@ struct TagsView: View {
 
 struct StockView: View {
     var stock: Int
-    
+
     var body: some View {
         Label(
             title: { Text("In stock: \(stock)") },
@@ -99,9 +100,7 @@ struct StockView: View {
 
 struct PriceView: View {
     var price: Double
-    var discount: Double
-    
-    var discountedPrice: Double { price * (100 - discount) / 100 }
+   var discountedPrice: Double
     
     var body: some View {
         HStack {

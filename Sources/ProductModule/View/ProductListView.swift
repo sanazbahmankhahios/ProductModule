@@ -16,13 +16,13 @@ public struct ProductList: View {
         NavigationStack {
             VStack(spacing: 0) {
                 searchBar
-                
                 ScrollView {
                     LazyVStack(spacing: 0) {
                         if viewModel.filteredProducts.isEmpty && !viewModel.searchText.isEmpty {
                             emptyState
                         } else {
-                            ForEach(viewModel.searchText.isEmpty ? viewModel.products : viewModel.filteredProducts) { product in
+                            let products = viewModel.searchText.isEmpty ? viewModel.products : viewModel.filteredProducts
+                            ForEach(products) { product in
                                 NavigationLink {
                                     ProductDetailView(viewModel: ProductDetailViewModel(product: product))
                                 } label: {
@@ -31,6 +31,7 @@ public struct ProductList: View {
                                         description: product.description,
                                         price: product.price,
                                         discountPercentage: product.discountPercentage,
+                                        discountedPrice: product.discountedPrice,
                                         icon: product.thumbnail,
                                         tags: product.tags,
                                         rate: product.rating
@@ -38,9 +39,12 @@ public struct ProductList: View {
                                 }
                                 .buttonStyle(.plain)
                                 .onAppear {
-                                    if viewModel.searchText.isEmpty {
+                                    if products.last?.id == product.id {
                                         viewModel.getMoreProducts(currentItem: product)
                                     }
+                                }
+                                .onChange(of: viewModel.products.count) {
+                                    // TODO: Check if search result is correct and get more if needed
                                 }
                             }
                         }

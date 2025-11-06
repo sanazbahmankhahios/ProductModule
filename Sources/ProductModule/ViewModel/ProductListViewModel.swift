@@ -9,26 +9,48 @@ import Foundation
 import Combine
 import ProductKit
 
+import Foundation
+import Combine
+import ProductKit
+
 @MainActor
 public class ProductViewModel: ObservableObject {
+   // private let client: ProductClientDependency
+    
     @Published public var products: [Product] = []
     @Published public var filteredProducts: [Product] = []
     @Published public var searchText: String = ""
     @Published public var loading: Bool = false
     @Published public var isRequestFailed: Bool = false
     
-    private var cancellables = Set<AnyCancellable>()
+    private var cancellable = Set<AnyCancellable>()
+    private let cache = ProductCacheManager()
     private var currentPage: Int = 0
     private var limit: Int = 20
     private var totalItems: Int = 0
-    
+
+    // TODO: Check for redundancy ProductClientDependency(client: ProductClientServer()))
     public init() {
+        // TODO: Single responsibility?
+        loadCachedProducts()
         setupSearch()
         getProducts()
     }
-        
+    
+    private func loadCachedProducts() {
+          let cached = cache.load()
+          if !cached.isEmpty {
+              products = cached
+              filteredProducts = cached
+          }
+      }
+    private func getProductsIfNeeded() {
+           guard products.isEmpty else { return }
+           getProducts()
+       }
+    
     public var shouldShowLoading: Bool {
-        products.isEmpty || products.count < totalItems
+        products.count < totalItems
     }
     
     public func getProducts() {
@@ -36,37 +58,67 @@ public class ProductViewModel: ObservableObject {
         loading = true
         isRequestFailed = false
         
-        let client = ProductClientDependency(client: ProductClientServer())
-        client.products(request: ProductRequest(limit: limit, skip: currentPage))
-            .receive(on: RunLoop.main)
-            .sink { [weak self] completion in
-                guard let self = self else { return }
-                self.loading = false
-                if case .failure = completion {
-                    self.isRequestFailed = true
-                }
-            } receiveValue: { [weak self] response in
-                guard let self = self else { return }
-                self.products.append(contentsOf: response.products)
-                self.totalItems = response.total
-                if self.products.count < self.totalItems {
-                    self.currentPage += self.limit
-                }
-                self.filteredProducts = self.filtered(for: self.searchText)
-            }
-            .store(in: &cancellables)
+        fetchProducts()
     }
     
-    public func getMoreProducts(currentItem item: Product) {
-        guard !loading else { return }
-        guard let index = products.firstIndex(where: { $0.id == item.id }),
-              index + 1 == products.count,
-              products.count < totalItems else { return }
+    private func fetchProducts() {
+        let request = ProductRequest(limit: limit, skip: currentPage)
+        //TODO: DI
+        let client = ProductClientDependency(client: ProductClientServer())
+        client.products(request: request)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] completion in
+                self?.handleCompletion(completion)
+            } receiveValue: { [weak self] response in
+                self?.handleResponse(response)
+            }
+            .store(in: &cancellable)
+    }
+
+    private func handleCompletion(_ completion: Subscribers.Completion<Error>) {
+        loading = false
+        if case .failure = completion {
+            isRequestFailed = true
+        }
+    }
+
+    private func handleResponse(_ response: ProductResponse) {
+        // Append only new products (avoid duplication)
+        let uniqueProducts = response.products.filter { newProduct in
+            !products.contains(where: { $0.id == newProduct.id })
+        }
+        products.append(contentsOf: uniqueProducts)
         
+        totalItems = response.total
+        if products.count < totalItems {
+            currentPage += limit
+        }
+        
+        filteredProducts = filtered(for: searchText)
+        self.cache.save(self.products)
+    }
+    
+    public func getMoreProducts() {
+        guard !loading else { return }
+        guard let lastItem = products.last else { return }
+        guard shouldLoadNextPage(after: lastItem) else { return }
+
         getProducts()
+    }
+
+    private func shouldLoadNextPage(after item: Product) -> Bool {
+        guard
+            let index = products.firstIndex(where: { $0.id == item.id }),
+            index == products.count - 1, // user reached the last item
+            products.count < totalItems  // still more products available
+        else {
+            return false
+        }
+        return true
     }
     
     private func setupSearch() {
+        //Note: Debounce is not essential for local search but added to demonstrate Combine operation usage as required by the challenge.
         $searchText
             .debounce(for: .milliseconds(300), scheduler: RunLoop.main)
             .map { [unowned self] text in
@@ -91,10 +143,7 @@ public class ProductViewModel: ObservableObject {
         let searchableText = (product.title + " " + product.description)
             .folding(options: .diacriticInsensitive, locale: .current)
             .lowercased()
-        let searchableWords = searchableText.components(separatedBy: CharacterSet.alphanumerics.inverted)
 
-        return queryWords.allSatisfy { queryWord in
-            searchableWords.contains { $0.contains(queryWord) }
-        }
+        return queryWords.allSatisfy { searchableText.contains($0) }
     }
 }

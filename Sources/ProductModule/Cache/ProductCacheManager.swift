@@ -6,15 +6,15 @@
 //
 import Foundation
 
-final class ProductCacheManager {
+public final class ProductCacheManager {
     private let cacheURL: URL
 
-    init(filename: String = "cachedProducts.json") {
+    public init(filename: String = "cachedProducts.json") {
         let directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
         cacheURL = directory.appendingPathComponent(filename)
     }
 
-    func save(_ products: [Product]) {
+    public func save(_ products: [Product]) {
         do {
             let data = try JSONEncoder().encode(products)
             try data.write(to: cacheURL, options: [.atomic])
@@ -23,7 +23,7 @@ final class ProductCacheManager {
         }
     }
 
-    func load() -> [Product] {
+    public func load() -> [Product] {
         do {
             let data = try Data(contentsOf: cacheURL)
             return try JSONDecoder().decode([Product].self, from: data)
@@ -32,7 +32,7 @@ final class ProductCacheManager {
         }
     }
 
-    func clear() {
+    public func clear() {
         try? FileManager.default.removeItem(at: cacheURL)
     }
 }

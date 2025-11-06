@@ -7,23 +7,24 @@
 import SwiftUI
 import ProductKit
 
-public struct ProductCell: View {
+struct ProductCell: View {
     private let imageHeight: CGFloat = 100
-    var title: String
-    var description: String
-    var price: Double
-    var discountPercentage: Double
-    var icon: URL?
-    var tags: [String]
-    var rate: Double
+    let title: String
+    let description: String
+    let price: Double
+    let discountPercentage: Double
+    let discountedPrice: Double
+    let icon: URL?
+    let tags: [String]
+    let rate: Double
     
-    public var body: some View {
+    var body: some View {
         VStack(alignment: .leading) {
             HStack(spacing: 16) {
                 ProductIconView(icon: icon, size: imageHeight)
                 VStack(alignment: .leading) {
                     headerView
-
+                    
                     if !tags.isEmpty {
                         tagsView
                     }
@@ -37,7 +38,7 @@ public struct ProductCell: View {
                 .shadow(radius: 0.5)
         }
     }
-
+    
     private var headerView: some View {
         HStack(alignment: .top) {
             Text(title)
@@ -47,7 +48,7 @@ public struct ProductCell: View {
             RateView(rate: rate)
         }
     }
-
+    
     private var tagsView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack {
@@ -66,33 +67,16 @@ public struct ProductCell: View {
         }
         .frame(height: 20)
     }
-
+    
     private var priceView: some View {
         HStack {
             Text(price.currencyValue)
                 .font(.callout)
                 .strikethrough()
-
+            
             Text(discountedPrice.currencyValue)
                 .foregroundStyle(Color.orange)
                 .font(.body)
         }
     }
-
-    private var discountedPrice: Double {
-        price * (100 - discountPercentage) / 100
-    }
-}
-
-#Preview {
-    let product = Product.mock
-    ProductCell(
-        title: product.title,
-        description: product.description,
-        price: product.price,
-        discountPercentage: product.discountPercentage,
-        icon: product.images.first,
-        tags: product.tags,
-        rate: product.rating
-    )
 }

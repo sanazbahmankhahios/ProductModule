@@ -13,7 +13,7 @@ public struct ImageSlider: View {
     public init(images: [URL]) {
         self.images = images
     }
-
+    
     public var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 8) {

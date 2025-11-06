@@ -15,7 +15,7 @@ public class ProductDetailViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var error: Error?
 
-    private var cancellables = Set<AnyCancellable>()
+    private var cancellable = Set<AnyCancellable>()
 
     init(product: Product) {
         self.product = product
@@ -24,7 +24,7 @@ public class ProductDetailViewModel: ObservableObject {
     func getProductDetail() {
         isLoading = true
         error = nil
-
+//TODO: DI?
         let serverClient = ProductClientDependency(client: ProductClientServer())
 
         serverClient.product(by: product.id)
@@ -37,7 +37,8 @@ public class ProductDetailViewModel: ObservableObject {
                 }
             } receiveValue: { [weak self] updatedProduct in
                 self?.product = updatedProduct
+
             }
-            .store(in: &cancellables)
+            .store(in: &cancellable)
     }
 }
