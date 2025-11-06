@@ -61,7 +61,7 @@ public struct ProductList: View {
         }
     }
     
-    private var searchBar: some View {
+    public var searchBar: some View {
         TextField("Search products...", text: $viewModel.searchText)
             .padding(10)
             .background(Color.gray.opacity(0.2))
@@ -69,7 +69,7 @@ public struct ProductList: View {
             .padding(.horizontal)
     }
     
-    private var emptyState: some View {
+    public var emptyState: some View {
         Text("No products found")
             .font(.headline)
             .foregroundColor(.gray)
