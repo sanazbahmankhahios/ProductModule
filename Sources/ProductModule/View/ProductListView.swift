@@ -46,7 +46,7 @@ public struct ProductList: View {
                         }
                         
                         if viewModel.shouldShowLoading {
-                            LoaderView(failed: viewModel.isRequestFailed)
+                            ProgressView("Loading...")
                         }
                     }
                     .padding(.top, 8)
