@@ -17,7 +17,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/sanazbahmankhahios/ProductKit.git", from: "1.0.0"),
+        .package(url: "https://github.com/sanazbahmankhahios/ProductKit.git", branch: "main"),
         .package(url: "https://github.com/onevcat/Kingfisher.git", from: "8.6.1")
     ],
     targets: [
